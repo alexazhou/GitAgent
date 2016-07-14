@@ -68,9 +68,51 @@ class StatusHandler(tornado.web.RequestHandler):
 
         return info
 
+class PullHandle(tornado.web.RequestHandler):
+    @return_json
+    def post(self,repo):
+        config = load_config()
+        repo_path = config['repo'][ repo ]['repo_path']
+       
+        gitbranch = None
+        githash = None
+        #pull latest code
+        if gitbranch == None:
+            gitbranch = "master"
+    
+        print( "-"*20 + "git checkout " + gitbranch + "-"*20 )
+        p_gitpull = subprocess.Popen( ["git", "checkout", gitbranch] )
+        p_gitpull.wait()
+    
+        ret = p_gitpull.returncode
+        if ret != 0:
+            print("git checkout failed")
+            sys.exit(ret)
+    
+        print( "-"*20 + "git pull" + "-"*20 )
+        p_gitpull = subprocess.Popen( ["git","pull"] )
+        p_gitpull.wait()
+
+        ret = p_gitpull.returncode
+        if ret != 0:
+            print("git pull failed")
+            sys.exit(ret)
+
+        if githash != None:
+            print( "-"*20 + "git checkout " + githash  +  "-"*20 )
+            p_gitcheckout = subprocess.Popen( ["git","checkout", githash] )
+            p_gitcheckout.wait()
+
+            ret = p_gitcheckout.returncode
+            if ret != 0:
+                print("git checkout failed")
+                sys.exit(ret)
+
+        return []
+
 
 application = tornado.web.Application([
-    ("/repo/([^/]+)/pull", StatusHandler),
+    ("/repo/([^/]+)/pull", PullHandle),
     ("/repo/([^/]+)", StatusHandler),
     ("/repo", RepoHandler ),
     ("/", MainHandler),
