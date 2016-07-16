@@ -17,6 +17,7 @@ import urllib.parse
 import time
 import json
 import git
+import threading
 
 #import config
 
@@ -33,6 +34,66 @@ def load_config():
         config = json.load(f)
     
     return config
+
+
+class GitWorker():
+    def __init__(self,repo_path,git_branch,git_hash):
+        self.repo_path = repo_path
+        self.git_branch = git_branch
+        self.git_hash = git_hash
+        self.finish_ret = None
+
+    def worker(self):
+
+        print( "-"*20 + "git checkout " + self.git_branch + "-"*20 )
+        p_gitpull = subprocess.Popen( ["git", "checkout", self.git_branch ] )
+        p_gitpull.wait()
+        
+        ret = p_gitpull.returncode
+        if ret != 0:
+            self.finish_ret = False
+            print("git checkout failed")
+            return
+        
+        print( "-"*20 + "git pull" + "-"*20 )
+        p_gitpull = subprocess.Popen( ["git","pull"] )
+        p_gitpull.wait()
+
+        ret = p_gitpull.returncode
+        if ret != 0:
+            self.finish_ret = False
+            print("git pull failed")
+            return
+
+        if self.git_hash != None:
+            print( "-"*20 + "git checkout " + self.git_hash +  "-"*20 )
+            p_gitcheckout = subprocess.Popen( ["git","checkout", self.git_hash ] )
+            p_gitcheckout.wait()
+
+            ret = p_gitcheckout.returncode
+            if ret != 0:
+                self.finish_ret = False
+                print("git checkout failed")
+                return
+        
+        self.finish_ret = True
+
+    def start(self):
+        t = threading.Thread( target = self.worker )
+        t.start()
+
+    def non_block_read(self,output):
+        fd = output.fileno()
+        fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+        fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+        try:
+            ret = output.read()
+            if ret == None:
+                ret = "".encode("utf8")
+
+            return ret
+        except:
+            return "".encode("utf8")
 
 
 def return_json(fn):
@@ -69,46 +130,36 @@ class StatusHandler(tornado.web.RequestHandler):
         return info
 
 class PullHandle(tornado.web.RequestHandler):
-    @return_json
+    @tornado.web.asynchronous
     def post(self,repo):
+        self.set_header("Content-Type", "application/json; charset=UTF-8") 
+        
+        block = False
+        branch = 'master'
+        commit_hash = None
+            
         config = load_config()
         repo_path = config['repo'][ repo ]['repo_path']
-       
-        gitbranch = None
-        githash = None
-        #pull latest code
-        if gitbranch == None:
-            gitbranch = "master"
-    
-        print( "-"*20 + "git checkout " + gitbranch + "-"*20 )
-        p_gitpull = subprocess.Popen( ["git", "checkout", gitbranch] )
-        p_gitpull.wait()
-    
-        ret = p_gitpull.returncode
-        if ret != 0:
-            print("git checkout failed")
-            sys.exit(ret)
-    
-        print( "-"*20 + "git pull" + "-"*20 )
-        p_gitpull = subprocess.Popen( ["git","pull"] )
-        p_gitpull.wait()
 
-        ret = p_gitpull.returncode
-        if ret != 0:
-            print("git pull failed")
-            sys.exit(ret)
+        block = self.get_argument( 'block', '0')
+        git_branch = self.get_argument( 'branch', None)
+        git_hash = self.get_argument( 'hash', None)
 
-        if githash != None:
-            print( "-"*20 + "git checkout " + githash  +  "-"*20 )
-            p_gitcheckout = subprocess.Popen( ["git","checkout", githash] )
-            p_gitcheckout.wait()
+        git_worker = GitWorker( repo_path, git_branch, git_hash )
+        git_worker.start()
+        
+        if block == '0':#no block
+            ret = 'success'
+            self.write( json.dumps( { 'ret':ret },sort_keys=True,indent=4,ensure_ascii=False ))
+            self.finish()
+        else:#block until git worker finish
+            while git_worker.finish_ret == None:
+               time.sleep(1)
+            
+            ret = 'success'
+            self.write( json.dumps( { 'ret':ret },sort_keys=True,indent=4,ensure_ascii=False ))
+            self.finish()
 
-            ret = p_gitcheckout.returncode
-            if ret != 0:
-                print("git checkout failed")
-                sys.exit(ret)
-
-        return []
 
 
 application = tornado.web.Application([
