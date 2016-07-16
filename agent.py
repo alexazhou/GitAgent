@@ -131,6 +131,7 @@ class StatusHandler(tornado.web.RequestHandler):
 
 class PullHandle(tornado.web.RequestHandler):
     @tornado.web.asynchronous
+    @tornado.gen.coroutine
     def post(self,repo):
         self.set_header("Content-Type", "application/json; charset=UTF-8") 
         
@@ -154,7 +155,7 @@ class PullHandle(tornado.web.RequestHandler):
             self.finish()
         else:#block until git worker finish
             while git_worker.finish_ret == None:
-               time.sleep(1)
+                yield tornado.gen.sleep(0.01)
             
             ret = 'success'
             self.write( json.dumps( { 'ret':ret },sort_keys=True,indent=4,ensure_ascii=False ))
