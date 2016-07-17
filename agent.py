@@ -78,19 +78,6 @@ class GitWorker():
         t = threading.Thread( target = self.worker )
         t.start()
 
-    def non_block_read(self,output):
-        fd = output.fileno()
-        fl = fcntl.fcntl(fd, fcntl.F_GETFL)
-        fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
-        try:
-            ret = output.read()
-            if ret == None:
-                ret = "".encode("utf8")
-
-            return ret
-        except:
-            return "".encode("utf8")
-
 
 def return_json(fn):
     def wrapper( self, *args, **kwargs ):
