@@ -28,6 +28,8 @@ settings = {
 	"static_path": os.path.join(os.path.dirname(__file__), "static")
 }
 
+repo_lock = {}
+
 def load_config():
     config = None
     with open( CONFIG_JSON, 'r' ) as f:
@@ -77,7 +79,7 @@ class GitWorker():
         except:
             self.finish_ret = 'failed'
         
-        print( "-"*20 + "git checkout finish" + "-"*20 )
+        print( "-"*20 + "git checkout finish:" + self.finish_ret + "-"*20 )
 
     def start(self):
         t = threading.Thread( target = self.worker )
@@ -126,6 +128,13 @@ class PullHandle(tornado.web.RequestHandler):
         block = False
         branch = 'master'
         commit_hash = None
+
+        if repo in repo_lock:
+            ret = 'failed'
+            self.write( json.dumps( { 'ret':ret },sort_keys=True,indent=4,ensure_ascii=False ))
+            self.finish()
+        else:
+            repo_lock[repo] = True
             
         config = load_config()
         repo_path = config['repo'][ repo ]['repo_path']
@@ -139,17 +148,15 @@ class PullHandle(tornado.web.RequestHandler):
         
         if block == '0':#no block
             ret = 'success'
-            self.write( json.dumps( { 'ret':ret },sort_keys=True,indent=4,ensure_ascii=False ))
-            self.finish()
         else:#block until git worker finish
             while git_worker.finish_ret == None:
                 yield tornado.gen.sleep(0.01)
             
             ret = git_worker.finish_ret
-            self.write( json.dumps( { 'ret':ret },sort_keys=True,indent=4,ensure_ascii=False ))
-            self.finish()
-
-
+        
+        self.write( json.dumps( { 'ret':ret },sort_keys=True,indent=4,ensure_ascii=False ))
+        self.finish()
+        del repo_lock[repo]
 
 application = tornado.web.Application([
     ("/repo/([^/]+)/pull", PullHandle),
