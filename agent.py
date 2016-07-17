@@ -135,7 +135,7 @@ class PullHandle(tornado.web.RequestHandler):
         commit_hash = None
 
         if repo in repo_lock:
-            ret = 'failed'
+            ret = 'fail'
             self.write( json.dumps( { 'ret':ret },sort_keys=True,indent=4,ensure_ascii=False ))
             self.finish()
         else:
