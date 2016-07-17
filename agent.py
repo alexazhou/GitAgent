@@ -115,7 +115,12 @@ class StatusHandler(tornado.web.RequestHandler):
         
         repo = git.Repo( repo_path )
         commit = repo.commit("HEAD")
-        info  ={ "hash":commit.hexsha,"author":str(commit.author),"message":commit.message}
+        if repo in repo_lock:
+            busy = True
+        else:
+            busy = False
+
+        info  ={ "hash":commit.hexsha,"author":str(commit.author),"message":commit.message,"busy":busy}
 
         return info
 
