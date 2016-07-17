@@ -54,23 +54,28 @@ class GitWorker():
     def worker(self):
         print( "-"*20 + "git checkout " + "-"*20 )
         print( "branch:" + self.git_branch )
-        print( "hash:" + str(self.git_hash) )
-        repo=git.Repo( self.repo_path )
+        print( "hash:" + str(self.git_hash))
 
-        if self.git_branch in repo.branches:
-            #checkout branch
-            repo.branches[self.git_branch].checkout()
-            #pull
-            repo.remotes['origin'].pull( progress=self.progress_delegate )
-        else:
-            #if the target branch is not existed in local, checkout out it at first
-            origin = repo.remotes['origin']
-            origin.update(  )
-            origin.refs[self.git_branch].checkout( b=self.git_branch )
-        
-        if self.git_hash != None:
-            git_exec = repo.git
-            git_exec.checkout( self.git_hash )
+        try:
+            repo=git.Repo( self.repo_path )
+            if self.git_branch in repo.branches:
+                #checkout branch
+                repo.branches[self.git_branch].checkout()
+                #pull
+                repo.remotes['origin'].pull( progress=self.progress_delegate )
+            else:
+                #if the target branch is not existed in local, checkout out it at first
+                origin = repo.remotes['origin']
+                origin.update(  )
+                origin.refs[self.git_branch].checkout( b=self.git_branch )
+            
+            if self.git_hash != None:
+                git_exec = repo.git
+                git_exec.checkout( self.git_hash )
+            
+            self.finish_ret = 'success'
+        except:
+            self.finish_ret = 'failed'
         
         print( "-"*20 + "git checkout finish" + "-"*20 )
 
