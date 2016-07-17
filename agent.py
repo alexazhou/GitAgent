@@ -9,11 +9,7 @@ import os
 import fcntl
 import subprocess
 import tornado.ioloop
-import tornado.websocket
 import tornado.web
-import tornado.httpclient
-import tornado.httputil
-import urllib.parse
 import time
 import json
 import git
