@@ -36,47 +36,43 @@ def load_config():
     return config
 
 
+class git_work_progress( git.RemoteProgress ):
+    def update(self,cur_count,max_count=None,message=""):
+        print( '-->',cur_count,max_count,message )
+
+
 class GitWorker():
     def __init__(self,repo_path,git_branch,git_hash):
         self.repo_path = repo_path
         self.git_branch = git_branch
         self.git_hash = git_hash
+
         self.finish_ret = None
-
+        self.output = ''
+        self.progress_delegate = git_work_progress()
+    
     def worker(self):
+        print( "-"*20 + "git checkout " + "-"*20 )
+        print( "branch:" + self.git_branch )
+        print( "hash:" + str(self.git_hash) )
+        repo=git.Repo( self.repo_path )
 
-        print( "-"*20 + "git checkout " + self.git_branch + "-"*20 )
-        p_gitpull = subprocess.Popen( ["git", "checkout", self.git_branch ] )
-        p_gitpull.wait()
+        if self.git_branch in repo.branches:
+            #checkout branch
+            repo.branches[self.git_branch].checkout()
+            #pull
+            repo.remotes['origin'].pull( progress=self.progress_delegate )
+        else:
+            #if the target branch is not existed in local, checkout out it at first
+            origin = repo.remotes['origin']
+            origin.update(  )
+            origin.refs[self.git_branch].checkout( b=self.git_branch )
         
-        ret = p_gitpull.returncode
-        if ret != 0:
-            self.finish_ret = False
-            print("git checkout failed")
-            return
-        
-        print( "-"*20 + "git pull" + "-"*20 )
-        p_gitpull = subprocess.Popen( ["git","pull"] )
-        p_gitpull.wait()
-
-        ret = p_gitpull.returncode
-        if ret != 0:
-            self.finish_ret = False
-            print("git pull failed")
-            return
-
         if self.git_hash != None:
-            print( "-"*20 + "git checkout " + self.git_hash +  "-"*20 )
-            p_gitcheckout = subprocess.Popen( ["git","checkout", self.git_hash ] )
-            p_gitcheckout.wait()
-
-            ret = p_gitcheckout.returncode
-            if ret != 0:
-                self.finish_ret = False
-                print("git checkout failed")
-                return
+            git_exec = repo.git
+            git_exec.checkout( self.git_hash )
         
-        self.finish_ret = True
+        print( "-"*20 + "git checkout finish" + "-"*20 )
 
     def start(self):
         t = threading.Thread( target = self.worker )
@@ -123,8 +119,8 @@ class StatusHandler(tornado.web.RequestHandler):
         config = load_config()
         repo_path = config['repo'][ repo ]['repo_path']
         
-        repo_obj = git.Repo( repo_path )
-        commit = repo_obj.commit("HEAD")
+        repo = git.Repo( repo_path )
+        commit = repo.commit("HEAD")
         info  ={ "hash":commit.hexsha,"author":str(commit.author),"message":commit.message}
 
         return info
@@ -157,7 +153,7 @@ class PullHandle(tornado.web.RequestHandler):
             while git_worker.finish_ret == None:
                 yield tornado.gen.sleep(0.01)
             
-            ret = 'success'
+            ret = git_worker.finish_ret
             self.write( json.dumps( { 'ret':ret },sort_keys=True,indent=4,ensure_ascii=False ))
             self.finish()
 
