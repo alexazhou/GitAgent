@@ -32,10 +32,23 @@ Return:
 
 ```
 {
+    {
     "author": "AlexaZhou",
     "busy": false,
-    "hash": "6ef63071ec9cfffa21edfc462cc7b1a2aa7eaaf6",
-    "message": "加入异常处理\n"
+    "changed_files": {
+        "A": [],
+        "D": [],
+        "M": [
+            "agent.py"
+        ],
+        "R": []
+    },
+    "dirty": true,
+    "hash": "c8c082d898c2dc18adb8e79f8992c074fb2294ce",
+    "message": "some message text",
+    "untracked_files": [
+        "config.json"
+    ]
 }
 ```
 
