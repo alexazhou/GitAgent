@@ -72,7 +72,8 @@ class GitWorker():
                 git_exec.checkout( self.git_hash )
             
             self.finish_ret = 'success'
-        except:
+        except git.exc.GitCommandError as e:
+            print('Exception:',e)
             self.finish_ret = 'failed'
         
         print( "-"*20 + "git checkout finish:" + self.finish_ret + "-"*20 )
