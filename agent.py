@@ -14,6 +14,8 @@ import time
 import json
 import git
 import threading
+import logging
+
 
 #import config
 
@@ -110,16 +112,17 @@ class StatusHandler(tornado.web.RequestHandler):
     def get(self,repo):
         config = load_config()
         repo_path = config['repo'][ repo ]['repo_path']
-        
+       
         repo = git.Repo( repo_path )
         commit = repo.commit("HEAD")
-        if repo in repo_lock:
-            busy = True
-        else:
-            busy = False
-
-        info  ={ "hash":commit.hexsha,"author":str(commit.author),"message":commit.message,"busy":busy}
-
+        
+        info = {}
+        info['hash'] = commit.hexsha
+        info['author'] = str(commit.author)
+        info['message'] = commit.message
+        info['busy'] = repo in repo_lock
+        info['dirty'] = repo.is_dirty()
+        
         return info
 
 class PullHandle(tornado.web.RequestHandler):
@@ -175,6 +178,10 @@ application = tornado.web.Application([
 
 
 if __name__ == "__main__":
+    
+    logging.basicConfig()
+    logging.root.setLevel(logging.INFO)
+    
     config = load_config()
     application.listen( config['port'], address=config['bind_ip'] )
     tornado.ioloop.IOLoop.instance().start()
