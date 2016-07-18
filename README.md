@@ -1,12 +1,20 @@
 # GitAgent
 A web server receive HTTP request to pull local repository
 
-##Need
- * Python3
+##install
+
+GitAgent based on python3, and those libs was required.
+
  * Tornado
  * GitPython
  
+you can use pip3 to install it. 
+ 
 ##Usage
+
+```python3 agent.py```
+
+##API
 
 ####list all repos
 
