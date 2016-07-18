@@ -37,8 +37,8 @@ def load_config():
 
 
 class git_work_progress( git.RemoteProgress ):
-    def update(self,cur_count,max_count=None,message=""):
-        print( '-->',cur_count,max_count,message )
+    def update(self,op_code,cur_count,max_count=None,message=""):
+        print( '-->',op_code,cur_count,max_count,message )
 
 
 class GitWorker():
