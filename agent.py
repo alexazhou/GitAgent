@@ -122,7 +122,17 @@ class StatusHandler(tornado.web.RequestHandler):
         info['message'] = commit.message
         info['busy'] = repo in repo_lock
         info['dirty'] = repo.is_dirty()
-        
+        info['untracked_files'] = repo.untracked_files
+        info['changed_files'] = {}
+
+        change = info['changed_files']
+        diff = repo.index.diff(None)
+
+        name_getter = lambda diff:diff.a_path
+        for change_type in "ADRM":
+            print( 'change_type:',change_type )
+            change[change_type] = list(map( name_getter, diff.iter_change_type( change_type )))
+
         return info
 
 class PullHandle(tornado.web.RequestHandler):
