@@ -45,10 +45,10 @@ class GitWorker():
         self.git_branch = git_branch
         self.git_hash = git_hash
 
+        self.progress_delegate = git_work_progress()
         self.finish_ret = None
         self.output = ''
-        self.progress_delegate = git_work_progress()
-    
+        self.err_msg = None 
     def worker(self):
         print( "-"*20 + "git checkout " + "-"*20 )
         print( "branch:" + self.git_branch )
@@ -74,6 +74,7 @@ class GitWorker():
             self.finish_ret = 'success'
         except git.exc.GitCommandError as e:
             print('Exception:',e)
+            self.err_msg = str(e)
             self.finish_ret = 'failed'
         
         print( "-"*20 + "git checkout finish:" + self.finish_ret + "-"*20 )
@@ -131,9 +132,13 @@ class PullHandle(tornado.web.RequestHandler):
         branch = 'master'
         commit_hash = None
 
+        ret = {}
+        ret['ret'] = 'success'
+        ret['err_msg'] = None
+
         if repo in repo_lock:
-            ret = 'fail'
-            self.write( json.dumps( { 'ret':ret },sort_keys=True,indent=4,ensure_ascii=False ))
+            ret['ret'] = 'fail'
+            self.write( json.dumps( ret, sort_keys=True, indent=4, ensure_ascii=False ))
             self.finish()
         else:
             repo_lock[repo] = True
@@ -149,14 +154,15 @@ class PullHandle(tornado.web.RequestHandler):
         git_worker.start()
         
         if block == '0':#no block
-            ret = 'success'
+            ret['ret'] = 'success'
         else:#block until git worker finish
             while git_worker.finish_ret == None:
                 yield tornado.gen.sleep(0.01)
             
-            ret = git_worker.finish_ret
+            ret['ret'] = git_worker.finish_ret
+            ret['err_msg'] = git_worker.err_msg
         
-        self.write( json.dumps( { 'ret':ret },sort_keys=True,indent=4,ensure_ascii=False ))
+        self.write( json.dumps( ret ,sort_keys=True,indent=4,ensure_ascii=False ))
         self.finish()
         del repo_lock[repo]
 
