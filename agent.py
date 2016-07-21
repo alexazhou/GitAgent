@@ -53,8 +53,7 @@ class GitWorker():
         self.repo_path = repo_path
         self.git_branch = git_branch
         self.git_hash = git_hash
-        self.console_id = None
-
+        self.console_id = console_id  
         self.finish_ret = None
         self.output = ''
         self.err_msg = None
@@ -62,11 +61,14 @@ class GitWorker():
     def console_output(self,s):
         print('console %s >>'%self.console_id,s )
         if self.console_id != None:
-            ws_cocket = client_sockets[ self.console_id ]
-            msg = {}
-            msg['type'] = 'log'
-            msg['content'] = s
-            ws_cocket.write_message( msg )
+            try:
+                ws_cocket = client_sockets[ self.console_id ]
+                msg = {}
+                msg['type'] = 'output'
+                msg['content'] = s
+                ws_cocket.write_message( msg )
+            except:
+                print('write to websocket failed')
 
     def worker(self):
         print( "-"*20 + "git checkout " + "-"*20 )
@@ -165,10 +167,11 @@ class PullHandle(tornado.web.RequestHandler):
     def post(self,repo):
         self.set_header("Content-Type", "application/json; charset=UTF-8") 
         
-        block = False
-        branch = 'master'
-        commit_hash = None
-
+        block = self.get_argument( 'block', '0')
+        git_branch = self.get_argument( 'git_branch', 'master')
+        git_hash = self.get_argument( 'git_hash', None)
+        console_id = self.get_argument( 'console_id', None)
+        
         ret = {}
         ret['ret'] = 'success'
         ret['err_msg'] = None
@@ -185,11 +188,7 @@ class PullHandle(tornado.web.RequestHandler):
         config = load_config()
         repo_path = config['repo'][ repo ]['repo_path']
 
-        block = self.get_argument( 'block', '0')
-        git_branch = self.get_argument( 'git_branch', None)
-        git_hash = self.get_argument( 'git_hash', None)
-
-        git_worker = GitWorker( repo_path, git_branch, git_hash )
+        git_worker = GitWorker( repo_path, git_branch, git_hash, console_id )
         git_worker.start()
         
         if block == '0':#no block
@@ -230,6 +229,7 @@ application = tornado.web.Application([
     ("/repo/([^/]+)/pull", PullHandle),
     ("/repo/([^/]+)", StatusHandler),
     ("/repo", RepoHandler ),
+    ("/console", ConsoleHandler ),
     ("/", MainHandler),
 ],**settings)
 
