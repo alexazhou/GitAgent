@@ -27,6 +27,8 @@ settings = {
 
 repo_lock = {}
 
+pretty_json_dump = lambda x:json.dumps( x,sort_keys=True,indent=4,ensure_ascii=False )
+ 
 def load_config():
     config = None
     with open( CONFIG_JSON, 'r' ) as f:
@@ -90,7 +92,7 @@ def return_json(fn):
         self.set_header("Content-Type", "application/json; charset=UTF-8") 
         ret = fn( self, *args, **kwargs )
         if ret != None:
-            self.write( json.dumps( ret,sort_keys=True,indent=4,ensure_ascii=False ))
+            self.write( pretty_json_dump(ret) )
     return wrapper
 
 
@@ -150,8 +152,10 @@ class PullHandle(tornado.web.RequestHandler):
 
         if repo in repo_lock:
             ret['ret'] = 'failure'
-            self.write( json.dumps( ret, sort_keys=True, indent=4, ensure_ascii=False ))
+            ret['err_msg'] = 'repo is busying'
+            self.write( pretty_json_dump(ret))
             self.finish()
+            return
         else:
             repo_lock[repo] = True
             
@@ -174,7 +178,7 @@ class PullHandle(tornado.web.RequestHandler):
             ret['ret'] = git_worker.finish_ret
             ret['err_msg'] = git_worker.err_msg
         
-        self.write( json.dumps( ret ,sort_keys=True,indent=4,ensure_ascii=False ))
+        self.write( pretty_json_dump(ret))
         self.finish()
         del repo_lock[repo]
 
