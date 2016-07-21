@@ -10,6 +10,7 @@ import fcntl
 import subprocess
 import tornado.ioloop
 import tornado.web
+import tornado.websocket
 import time
 import json
 import git
@@ -26,6 +27,7 @@ settings = {
 }
 
 repo_lock = {}
+client_sockets = {}
 
 pretty_json_dump = lambda x:json.dumps( x,sort_keys=True,indent=4,ensure_ascii=False )
  
@@ -38,39 +40,60 @@ def load_config():
 
 
 class git_work_progress( git.RemoteProgress ):
+    def __init__(self,delegate):
+        self.delegate = delegate
+
     def update(self,op_code,cur_count,max_count=None,message=""):
         print( '-->',op_code,cur_count,max_count,message )
+        delegate.console_output( 'gagaga' )
 
 
 class GitWorker():
-    def __init__(self,repo_path,git_branch,git_hash):
+    def __init__(self,repo_path,git_branch,git_hash,console_id = None):
         self.repo_path = repo_path
         self.git_branch = git_branch
         self.git_hash = git_hash
+        self.console_id = None
 
-        self.progress_delegate = git_work_progress()
         self.finish_ret = None
         self.output = ''
-        self.err_msg = None 
+        self.err_msg = None
+
+    def console_output(self,s):
+        print('console %s >>'%self.console_id,s )
+        if self.console_id != None:
+            ws_cocket = client_sockets[ self.console_id ]
+            msg = {}
+            msg['type'] = 'log'
+            msg['content'] = s
+            ws_cocket.write_message( msg )
+
     def worker(self):
         print( "-"*20 + "git checkout " + "-"*20 )
         print( "branch:" + self.git_branch )
         print( "hash:" + str(self.git_hash))
+        
+        progress_delegate = git_work_progress( self )
 
         try:
             repo=git.Repo( self.repo_path )
             if self.git_branch in repo.branches:
                 #checkout branch
+                self.console_output( 'checkout %s...'%self.git_branch )
                 repo.branches[self.git_branch].checkout()
                 #pull
-                repo.remotes['origin'].pull( progress=self.progress_delegate )
+                self.console_output( 'pull...' )
+                repo.remotes['origin'].pull( progress= progress_delegate )
             else:
                 #if the target branch is not existed in local, checkout out it at first
+                self.console_output( 'branch %s not existed local. update remote branches...'%self.git_branch )
                 origin = repo.remotes['origin']
                 origin.update(  )
+                self.console_output( 'checkout branch %s...'%self.git_branch )
                 origin.refs[self.git_branch].checkout( b=self.git_branch )
             
             if self.git_hash != None:
+                self.console_output( 'git checkout %s...'%self.git_hash )
                 git_exec = repo.git
                 git_exec.checkout( self.git_hash )
             
@@ -181,6 +204,27 @@ class PullHandle(tornado.web.RequestHandler):
         self.write( pretty_json_dump(ret))
         self.finish()
         del repo_lock[repo]
+
+        
+class ConsoleHandler(tornado.websocket.WebSocketHandler):
+    """docstring for ConsoleHandler"""
+
+    def check_origin(self, origin):
+        return True
+
+    def open(self):
+        print("websocket open")
+        self.write_message(json.dumps({
+          'type': 'sys',
+          'message': 'Welcome to WebSocket',
+          'id': str(id(self)),
+        }))
+        client_sockets[ str(id(self)) ] = self
+
+    def on_close(self):
+        print("websocket close")
+        del client_sockets[ str(id(self)) ]
+
 
 application = tornado.web.Application([
     ("/repo/([^/]+)/pull", PullHandle),
