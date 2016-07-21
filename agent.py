@@ -16,7 +16,6 @@ import git
 import threading
 import logging
 
-
 #import config
 
 CONFIG_JSON = './config.json'
@@ -150,7 +149,7 @@ class PullHandle(tornado.web.RequestHandler):
         ret['err_msg'] = None
 
         if repo in repo_lock:
-            ret['ret'] = 'fail'
+            ret['ret'] = 'failure'
             self.write( json.dumps( ret, sort_keys=True, indent=4, ensure_ascii=False ))
             self.finish()
         else:
@@ -160,8 +159,8 @@ class PullHandle(tornado.web.RequestHandler):
         repo_path = config['repo'][ repo ]['repo_path']
 
         block = self.get_argument( 'block', '0')
-        git_branch = self.get_argument( 'branch', None)
-        git_hash = self.get_argument( 'hash', None)
+        git_branch = self.get_argument( 'git_branch', None)
+        git_hash = self.get_argument( 'git_hash', None)
 
         git_worker = GitWorker( repo_path, git_branch, git_hash )
         git_worker.start()

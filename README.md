@@ -64,7 +64,7 @@ busy means the repo is processing a pull request or other action
 
 ####repo pull / switch branch / switch hash
 
-```curl -v -d 'branch=master&hash=abcdefg&block=1' 'http://localhost:10000/repo/demo1/pull'```
+```curl -v -d 'git_branch=master&git_hash=abcdefg&block=1' 'http://localhost:10000/repo/demo1/pull'```
 
 Return:
 
