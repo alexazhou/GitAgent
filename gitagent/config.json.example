@@ -1,0 +1,10 @@
+{
+    "bind_ip":"0.0.0.0",
+	"port":10000,
+	"repo":{
+		"licaifanweb":{
+			"repo_path":"./",
+			"allow_pull":true
+		}
+	}
+}
