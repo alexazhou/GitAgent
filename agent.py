@@ -76,13 +76,17 @@ class GitWorker():
         print( "hash:" + str(self.git_hash))
         
         progress_delegate = git_work_progress( self )
+        
 
         try:
             repo=git.Repo( self.repo_path )
+            print( 'Now repo is on branch:',repo.active_branch.name )
+            
             if self.git_branch in repo.branches:
-                #checkout branch
-                self.console_output( 'checkout %s...'%self.git_branch )
-                repo.branches[self.git_branch].checkout()
+                #make sure on right branch
+                if repo.active_branch.name != self.git_branch:
+                    self.console_output( 'checkout %s...'%self.git_branch )
+                    repo.branches[self.git_branch].checkout()
                 #pull
                 self.console_output( 'pull...' )
                 repo.remotes['origin'].pull( progress= progress_delegate )
@@ -143,6 +147,7 @@ class StatusHandler(tornado.web.RequestHandler):
         commit = repo.commit("HEAD")
         
         info = {}
+        info['branch'] = repo.active_branch.name
         info['hash'] = commit.hexsha
         info['author'] = str(commit.author)
         info['message'] = commit.message
