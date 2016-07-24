@@ -17,6 +17,8 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
+import gitagent.agent
+
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
@@ -29,7 +31,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.0.1',
+    version=gitagent.agent.VERSION,
 
     description='A web server receive HTTP request to pull local repository',
     long_description=long_description,
@@ -57,7 +59,7 @@ setup(
         'Topic :: Software Development :: Build Tools',
 
         # Pick your license as you wish (should match "license" above)
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: LGPL License',
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.

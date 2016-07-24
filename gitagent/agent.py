@@ -17,7 +17,8 @@ import git
 import threading
 import logging
 
-#import config
+
+VERSION = '0.0.2'
 
 CONFIG_JSON = './config.json'
 
