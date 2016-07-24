@@ -3,4 +3,9 @@
 # @Date    : 2016-07-23 10:20
 # @Author  : Alexa (AlexaZhou@163.com)
 # @Link    : 
-# @Disc    : 
+# @Disc    :
+
+import gitagent.agent
+
+__version__ = gitagent.agent.VERSION
+

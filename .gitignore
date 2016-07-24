@@ -4,3 +4,4 @@
 gitagent/config.json
 dist/*
 GitAgent.egg-info/*
+__pycache__
