@@ -30,14 +30,15 @@ repo_lock = {}
 client_sockets = {}
 
 pretty_json_dump = lambda x:json.dumps( x,sort_keys=True,indent=4,ensure_ascii=False )
- 
-def load_config():
-    config = None
-    with open( CONFIG_JSON, 'r' ) as f:
-        config = json.load(f)
-    
+
+config = None
+
+def get_config(  ):
     return config
 
+def set_config( value ):
+    global config
+    config = value
 
 class git_work_progress( git.RemoteProgress ):
     def __init__(self,delegate):
@@ -133,14 +134,14 @@ class MainHandler(tornado.web.RequestHandler):
 class RepoHandler(tornado.web.RequestHandler):
     @return_json
     def get(self):
-        config = load_config()
+        config = get_config()
         ret = list(config['repo'].keys())
         return ret
 
 class StatusHandler(tornado.web.RequestHandler):
     @return_json
     def get(self,repo):
-        config = load_config()
+        config = get_config()
         repo_path = config['repo'][ repo ]['repo_path']
        
         repo = git.Repo( repo_path )
@@ -190,7 +191,7 @@ class PullHandle(tornado.web.RequestHandler):
         else:
             repo_lock[repo] = True
             
-        config = load_config()
+        config = get_config()
         repo_path = config['repo'][ repo ]['repo_path']
 
         git_worker = GitWorker( repo_path, git_branch, git_hash, console_id )
@@ -238,12 +239,11 @@ application = tornado.web.Application([
     ("/", MainHandler),
 ],**settings)
 
+def start_server():
 
-if __name__ == "__main__":
-    
     logging.basicConfig()
     logging.root.setLevel(logging.INFO)
     
-    config = load_config()
+    config = get_config()
     application.listen( config['port'], address=config['bind_ip'] )
     tornado.ioloop.IOLoop.instance().start()
