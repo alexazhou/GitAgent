@@ -18,8 +18,6 @@ import threading
 import logging
 
 
-VERSION = '0.0.3'
-
 CONFIG_JSON = './config.json'
 
 settings = {

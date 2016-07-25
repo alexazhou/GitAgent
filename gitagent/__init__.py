@@ -5,7 +5,5 @@
 # @Link    : 
 # @Disc    :
 
-import gitagent.agent
-
-__version__ = gitagent.agent.VERSION
+__version__ = '0.0.4'
 
