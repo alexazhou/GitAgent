@@ -12,8 +12,8 @@ import getopt
 import gitagent.agent as agent
 
 help_doc = '''usage: [options] cmd
-    [-f filename] write: write default config into a file
-    [-f filename] run: run with config 
+    [-c filename] write: write default config into a file
+    [-c filename] run: run with config 
     '''
 
 example_config = {
@@ -53,7 +53,7 @@ def exit_with_message( message ):
 
 
 if __name__ == "__main__":
-    opts, args = getopt.getopt(sys.argv[1:], 'w:c:', []) 
+    opts, args = getopt.getopt(sys.argv[1:], 'c:', []) 
         
     if len(args) != 1:
         exit_with_message('args error') 
