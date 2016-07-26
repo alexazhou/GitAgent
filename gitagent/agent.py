@@ -77,7 +77,6 @@ class GitWorker():
         
         progress_delegate = git_work_progress( self )
         
-
         try:
             repo=git.Repo( self.repo_path )
             print( 'Now repo is on branch:',repo.active_branch.name )
@@ -85,7 +84,7 @@ class GitWorker():
             if self.git_branch in repo.branches:
                 #make sure on right branch
                 if repo.active_branch.name != self.git_branch:
-                    self.console_output( 'checkout %s...'%self.git_branch )
+                    self.console_output( 'checkout branch %s...'%self.git_branch )
                     repo.branches[self.git_branch].checkout()
                 #pull
                 self.console_output( 'pull...' )
@@ -99,12 +98,13 @@ class GitWorker():
                 origin.refs[self.git_branch].checkout( b=self.git_branch )
             
             if self.git_hash != None:
+                #TODO:判断本地是否存在 hash 对应的commit，如果存在则跳过 pull 的动作
                 self.console_output( 'git checkout %s...'%self.git_hash )
                 git_exec = repo.git
                 git_exec.checkout( self.git_hash )
             
             self.finish_ret = 'success'
-        except git.exc.GitCommandError as e:
+        except Exception as e:
             print('Exception:',e)
             self.err_msg = str(e)
             self.finish_ret = 'failed'
