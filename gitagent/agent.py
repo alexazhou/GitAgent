@@ -39,6 +39,7 @@ def set_config( value ):
 
 class git_work_progress( git.RemoteProgress ):
     def __init__(self,delegate):
+        git.RemoteProgress.__init__(self)
         self.delegate = delegate
 
     def update(self,op_code,cur_count,max_count=None,message=""):
