@@ -18,8 +18,6 @@ import threading
 import logging
 
 
-CONFIG_JSON = './config.json'
-
 settings = {
     'debug' : True,
 	"static_path": os.path.join(os.path.dirname(__file__), "static")
@@ -49,11 +47,12 @@ class git_work_progress( git.RemoteProgress ):
 
 
 class GitWorker():
-    def __init__(self,repo_path,git_branch,git_hash,console_id = None):
+    def __init__(self, repo_path, git_branch, git_hash, console_id=None, GIT_SSH_COMMAND=None):
         self.repo_path = repo_path
         self.git_branch = git_branch
         self.git_hash = git_hash
         self.console_id = console_id  
+        self.GIT_SSH_COMMAND = GIT_SSH_COMMAND
         self.finish_ret = None
         self.output = ''
         self.err_msg = None
@@ -79,6 +78,8 @@ class GitWorker():
         
         try:
             repo=git.Repo( self.repo_path )
+            if self.GIT_SSH_COMMAND != None:
+                repo.git.custom_environment( GIT_SSH_COMMAND=self.GIT_SSH_COMMAND )
             print( 'Now repo is on branch:',repo.active_branch.name )
             
             if self.git_branch in repo.branches:
@@ -173,6 +174,7 @@ class PullHandle(tornado.web.RequestHandler):
     @tornado.gen.coroutine
     def post(self,repo):
         self.set_header("Content-Type", "application/json; charset=UTF-8") 
+        config = get_config()
         if repo not in config['repo']:
             raise tornado.web.HTTPError(404)
         
@@ -180,6 +182,7 @@ class PullHandle(tornado.web.RequestHandler):
         git_branch = self.get_argument( 'git_branch', 'master')
         git_hash = self.get_argument( 'git_hash', None)
         console_id = self.get_argument( 'console_id', None)
+        GIT_SSH_COMMAND = None
         
         ret = {}
         ret['ret'] = 'success'
@@ -194,10 +197,12 @@ class PullHandle(tornado.web.RequestHandler):
         else:
             repo_lock[repo] = True
             
-        config = get_config()
         repo_path = config['repo'][ repo ]['repo_path']
+        if 'GIT_SSH_COMMAND' in config['repo'][repo]:
+            GIT_SSH_COMMAND = config['repo'][repo]['GIT_SSH_COMMAND']
+            print('use GIT_SSH_COMMAND:',GIT_SSH_COMMAND)
 
-        git_worker = GitWorker( repo_path, git_branch, git_hash, console_id )
+        git_worker = GitWorker( repo_path, git_branch, git_hash, console_id, GIT_SSH_COMMAND )
         git_worker.start()
         
         if block == '0':#no block
