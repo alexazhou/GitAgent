@@ -45,12 +45,16 @@ class AgentClient():
         self.base_url = ip + ':' + port
         self.console_receiver = console_receiver
         
-    def repo_list():
+    def repo_list(self):
         r = requests.get( 'http://' + self.base_url + '/repo'  , timeout=10 )
+        if r.status_code != 200:
+            raise Exception('Request failed with status_code:%s response:%s'%(r.status_code, r.content))
         return r.json()
 
     def repo_status(self, repo):
         r = requests.get( 'http://' + self.base_url + '/repo/' + repo , timeout=10 )
+        if r.status_code != 200:
+            raise Exception('Request failed with status_code:%s response:%s'%(r.status_code, r.content))
         return r.json()
    
     def pull(self, repo, git_branch='master', git_hash=None, block = 1):
@@ -64,7 +68,7 @@ class AgentClient():
         #print( 'connect GitAgent to deploy...' )   
         r = requests.post( 'http://' + self.base_url + '/repo/' + repo + '/pull' , data=data, timeout=600 )
         if r.status_code != 200:
-            raise Exception( 'request failed with status code %s:%s'%(r.status_code, r.content))
+            raise Exception('Request failed with status_code:%s response:%s'%(r.status_code, r.content))
         r_json = r.json()
         return r_json
 

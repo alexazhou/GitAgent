@@ -141,8 +141,10 @@ class StatusHandler(tornado.web.RequestHandler):
     @return_json
     def get(self,repo):
         config = get_config()
+        if repo not in config['repo']:
+            raise tornado.web.HTTPError(404)
+
         repo_path = config['repo'][ repo ]['repo_path']
-       
         repo = git.Repo( repo_path )
         commit = repo.commit("HEAD")
         
@@ -171,6 +173,8 @@ class PullHandle(tornado.web.RequestHandler):
     @tornado.gen.coroutine
     def post(self,repo):
         self.set_header("Content-Type", "application/json; charset=UTF-8") 
+        if repo not in config['repo']:
+            raise tornado.web.HTTPError(404)
         
         block = self.get_argument( 'block', '0')
         git_branch = self.get_argument( 'git_branch', 'master')
