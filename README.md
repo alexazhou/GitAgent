@@ -1,6 +1,8 @@
 # GitAgent
 A web server receive HTTP request to pull local repository
 
+[中文文档](https://github.com/alexazhou/GitAgent/blob/master/README_zh.md)
+
 ##Desc
 
 GitAgent run as a webserver. It receive command from http requests and do operation to local git repositorys.
