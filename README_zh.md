@@ -155,4 +155,45 @@ Return:
 * ****git_hash****: 可选参数. 如果没有指定 git_hash, gitagent 将自动 checkout 目标分支上面的最新一个提交 
 * ****command****: 可选参数. 如果指定了 command，那么这个 command 将会被在 pull 成功之后来执行 
 * ****block****: 可以是 0/1, 如果 block = 1, 那么这个请求会阻塞到操作全部完成之后才返回 
+
+
+
  
+##Client
+
+GitAgent 还包含了一个 client 实现，封装了 http 请求相关的代码。只需要通过
+
+```from gitagent import client```
+
+import 之后，就可以直接使用
+
+#### 创建 client 对象
+
+```
+agent_client = client.AgentClient( SERVER_ADDR, SERVER_PORT )
+```
+
+#### 获取仓库列表
+
+```
+agent_client.repo_list()
+
+>> ['repo1','repo2','repo3']
+```
+
+#### 获取仓库状态
+
+```
+agent_client.repo_status('repo1')
+{'untracked_files': ['a.txt', 'config.json', 'xxx.json'], 'busy': False, 'hash': '827b39799a543fee30a174d44cd0c5451776e413', 'dirty': True, 'changed_files': {'R': [], 'A': [], 'D': [], 'M': []}, 'author': 'AlexaZhou', 'branch': 'master', 'message': '\u66f4\u65b0\u6587\u6863\n'}
+```
+
+#### 对仓库进行操作
+```
+agent_client.pull('repo1', branch='master', hash='abcdefg', command='cmd1', block=1)
+>>{'ret': 'success', 'err_msg': None}
+```  
+注： branch, hash, command, block 都是可选参数
+
+
+

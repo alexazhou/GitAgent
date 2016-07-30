@@ -62,27 +62,28 @@ class GitWorker():
     def console_output(self,s):
         print('console [%s]>>'%self.console_id,s )
         if self.console_id != None:
+            
             try:
                 ws_cocket = client_sockets[ self.console_id ]
                 msg = {}
                 msg['type'] = 'output'
                 msg['content'] = s
                 ws_cocket.write_message( msg )
-            except:
-                print('write to websocket failed')
+
+            except Exception as e:
+                print('write to websocket failed:',e)
 
     def non_block_read(self, output):
         fd = output.fileno()
         fl = fcntl.fcntl(fd, fcntl.F_GETFL)
         fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
         try:
-            ret = output.read()
+            ret = output.read().decode('utf-8')
             if ret == None:
-                ret = "".encode("utf8")
-
+                ret = ""
             return ret
         except:
-            return "".encode("utf8")
+            return ""
 
     def worker(self):
         print( "-"*20 + "git checkout " + "-"*20 )
@@ -132,6 +133,8 @@ class GitWorker():
                     p_returncode = p_command.poll()
                     if p_returncode != None:
                         break
+
+                    time.sleep(0.01)
 
                 if p_returncode != 0:
                     raise Exception("exce command [%s] return code !=0"%self.command)
