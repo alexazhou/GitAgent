@@ -48,7 +48,7 @@ class git_work_progress( git.RemoteProgress ):
 
 
 class GitWorker():
-    def __init__(self, repo_path, git_branch, git_hash, console_id=None, GIT_SSH_COMMAND=None):
+    def __init__(self, repo_path, git_branch, git_hash, command=None, console_id=None, GIT_SSH_COMMAND=None):
         self.repo_path = repo_path
         self.git_branch = git_branch
         self.git_hash = git_hash
@@ -57,9 +57,10 @@ class GitWorker():
         self.finish_ret = None
         self.output = ''
         self.err_msg = None
+        self.command = command
 
     def console_output(self,s):
-        print('console %s >>'%self.console_id,s )
+        print('console [%s]>>'%self.console_id,s )
         if self.console_id != None:
             try:
                 ws_cocket = client_sockets[ self.console_id ]
@@ -69,6 +70,19 @@ class GitWorker():
                 ws_cocket.write_message( msg )
             except:
                 print('write to websocket failed')
+
+    def non_block_read(self, output):
+        fd = output.fileno()
+        fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+        fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+        try:
+            ret = output.read()
+            if ret == None:
+                ret = "".encode("utf8")
+
+            return ret
+        except:
+            return "".encode("utf8")
 
     def worker(self):
         print( "-"*20 + "git checkout " + "-"*20 )
@@ -104,6 +118,23 @@ class GitWorker():
                 self.console_output( 'git checkout %s...'%self.git_hash )
                 git_exec = repo.git
                 git_exec.checkout( self.git_hash )
+
+            if self.command != None:
+                self.console_output('Exec command:%s'%self.command)
+                p_command = subprocess.Popen(self.command, shell=True, bufsize=1024000, cwd=self.repo_path, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                p_returncode = None
+
+                while True:
+                    p_output = self.non_block_read(p_command.stdout)
+                    if len(p_output) != 0:
+                        self.console_output( p_output )
+
+                    p_returncode = p_command.poll()
+                    if p_returncode != None:
+                        break
+
+                if p_returncode != 0:
+                    raise Exception("exce command [%s] return code !=0"%self.command)
             
             self.finish_ret = 'success'
         except Exception as e:
@@ -183,12 +214,20 @@ class PullHandle(tornado.web.RequestHandler):
         git_branch = self.get_argument( 'git_branch', 'master')
         git_hash = self.get_argument( 'git_hash', None)
         console_id = self.get_argument( 'console_id', None)
+        cmd = self.get_argument( 'command', None)
         GIT_SSH_COMMAND = None
         
         ret = {}
         ret['ret'] = 'success'
         ret['err_msg'] = None
-
+        command = None
+        
+        if cmd != None:
+            if cmd not in config['repo'][repo]['command']:
+                raise tornado.web.HTTPError(501)
+            else:
+                command = config['repo'][repo]['command'][cmd]
+            
         if repo in repo_lock:
             ret['ret'] = 'failure'
             ret['err_msg'] = 'repo is busying'
@@ -203,9 +242,9 @@ class PullHandle(tornado.web.RequestHandler):
             GIT_SSH_COMMAND = config['repo'][repo]['GIT_SSH_COMMAND']
             print('use GIT_SSH_COMMAND:',GIT_SSH_COMMAND)
 
-        git_worker = GitWorker( repo_path, git_branch, git_hash, console_id, GIT_SSH_COMMAND )
+        git_worker = GitWorker( repo_path, git_branch, git_hash, command, console_id, GIT_SSH_COMMAND)
         git_worker.start()
-        
+
         if block == '0':#no block
             ret['ret'] = 'success'
         else:#block until git worker finish
