@@ -6,78 +6,34 @@ A web server receive HTTP request to pull local repository
 install
 -------
 
+python3 -m pip install gitagent
+
+require
+-------
+
 GitAgent based on python3, and those libs was required.
 
 -  Tornado
 -  GitPython
 
-you can use pip3 to install it.
+if you use pip install GitAgent, the requirements will be install
+automatic.
 
-Usage
------
+Desc
+----
 
-``python3 agent.py``
+GitAgent run as a webserver. It receive command from http requests and
+do operation to local git repositorys.
 
-API
----
+So GitAgent let you can do git operation over http request.
 
-list all repos
-^^^^^^^^^^^^^^
+With GitAgent, you can a git repository on other machine to:
 
-``curl -v 'http://localhost:10000/repo'``
+-  get current status
+-  pull latest code
+-  checkout branch …
 
-Return:
+GitAgent also support execute some commant after pull success, and use a
+password to protect http request.
 
-::
-
-    [
-        "demo1",
-        "demo2",
-        "demo3"
-    ]
-
-repo status
-^^^^^^^^^^^
-
-``curl -v 'http://localhost:10000/repo/demo1'``
-
-Return:
-
-::
-
-    {
-        {
-        "author": "AlexaZhou",
-        "busy": false,
-        "changed_files": {
-            "A": [],
-            "D": [],
-            "M": [
-                "agent.py"
-            ],
-            "R": []
-        },
-        "dirty": true,
-        "hash": "c8c082d898c2dc18adb8e79f8992c074fb2294ce",
-        "message": "some message text",
-        "untracked_files": [
-            "config.json"
-        ]
-    }
-
-busy means the repo is processing a pull request or other action
-
-repo pull / switch branch / switch hash
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-``curl -v -d 'git_branch=master&git_hash=abcdefg&block=1' 'http://localhost:10000/repo/demo1/pull'``
-
-Return:
-
-::
-
-    {
-        "ret": "success"
-    }
-
-if block = 1, the request will block until the git work finish
+You can see detail documents over https://github.com/alexazhou/GitAgent
