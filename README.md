@@ -28,6 +28,7 @@ GitAgent based on python3, and those libs was required.
 
  * Tornado
  * GitPython
+ * ws4py
  
 if you use pip install GitAgent, the requirements will be install automatic.
 

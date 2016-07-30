@@ -12,7 +12,7 @@ GitAgent 作为一个web服务来运行. 接收来自 Http 请求的命令来对
 * checkout 分支／版本
 ...
 
-GitAgent 还支持在 pull 成功之后执行指定的命令（主要是为了方便完成部署的附加工作），也允许设置密码来保护借口的安全性
+GitAgent 还支持在 pull 成功之后执行指定的命令（主要是为了方便完成部署的附加工作），也允许设置密码来保护接口的安全性
 
 ##安装
 
@@ -20,7 +20,7 @@ python3 -m pip install gitagent
 
 ##依赖
 
-GitAgent 基于 Python3，下面这些库是须要的。
+GitAgent 基于 Python3，下面这些库是需要的。
 
  * Tornado
  * GitPython
@@ -77,18 +77,18 @@ command 中可以定义多个命令，通过 http 请求来控制 pull 的时候
 #### step 1: 生成配置文件
 ```python3 -m gitagent [-c config.json] write```
 
-The default config file will by written to config.json, then you can known the config format.
+执行这条命令之后，默认配置模版会被写入到指定的文件
 
-if the -c arg don't gived, gitagent will write the config.json to current directory
+如果没有给出 -c 参数, gitagent 会写入配置模板到当前目录的 config.json
 
 #### step 2: 编辑配置文件
 
-Just edit the config file as you need
+按照自己的情况编辑配置模板
 
 #### step 2: 运行 gitagent
 ```python3 -m gitagent [-c config.json] run```
 
-If you havn't see any error message, the gitagent is running.
+如果没有报错，那么gitagent就已经在运行了（目前 gitagent 在前台运行，如果需要的话可以使用 supervisor 使其在后台运行 ）
 
 ##API
 
