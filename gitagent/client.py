@@ -9,6 +9,7 @@ import requests
 import threading
 import time
 import json
+from gitagent import auth
 from ws4py.client.threadedclient import WebSocketClient
 
 
@@ -38,38 +39,56 @@ class WebSocketConsole(WebSocketClient):
 
 
 class AgentClient():
-    def __init__(self, ip, port, console_receiver = print):
+    def __init__(self, ip, port, password=None, console_receiver=print):
         self.web_console = None
         self.ip = ip
         self.port = str(port)
         self.base_url = ip + ':' + self.port
+        self.password = password
         self.console_receiver = console_receiver
+    
+    def request_sign(self, method, uri, args):
         
+        if self.password != None:
+            args = auth.sign( method, uri, args, self.password )
+
+        return args
+
     def repo_list(self):
-        r = requests.get( 'http://' + self.base_url + '/repo'  , timeout=10 )
+        uri = '/repo'
+        args = {}
+        args = self.request_sign( 'GET', uri, args )
+
+        r = requests.get( 'http://' + self.base_url + uri, data=args, timeout=10 )
         if r.status_code != 200:
             raise Exception('Request failed with status_code:%s response:%s'%(r.status_code, r.content))
         return r.json()
 
     def repo_status(self, repo):
-        r = requests.get( 'http://' + self.base_url + '/repo/' + repo , timeout=10 )
+        uri = '/repo/' + repo
+        args = {}
+        args = self.request_sign( 'GET', uri, args )
+        r = requests.get( 'http://' + self.base_url + uri , data=args, timeout=10 )
         if r.status_code != 200:
             raise Exception('Request failed with status_code:%s response:%s'%(r.status_code, r.content))
         return r.json()
    
     def pull(self, repo, git_branch='master', git_hash=None, command=None, block = 1):
-        data ={ 'git_branch':git_branch, 'block':block }
+        args ={ 'git_branch':git_branch, 'block':block }
         if git_hash != None:
-            data['git_hash'] = git_hash
+            args['git_hash'] = git_hash
 
         if self.web_console != None:
-            data['console_id'] = self.web_console.websocket_id
+            args['console_id'] = self.web_console.websocket_id
 
         if command != None:
-            data['command'] = command
-            
+            args['command'] = command
+
+        uri = '/repo/' + repo + '/pull'
+        args = self.request_sign( 'POST', uri, args )
+        
         #print( 'connect GitAgent to deploy...' )   
-        r = requests.post( 'http://' + self.base_url + '/repo/' + repo + '/pull' , data=data, timeout=600 )
+        r = requests.post( 'http://' + self.base_url + uri , data=args, timeout=600 )
         if r.status_code != 200:
             raise Exception('Request failed with status_code:%s response:%s'%(r.status_code, r.content))
         r_json = r.json()
