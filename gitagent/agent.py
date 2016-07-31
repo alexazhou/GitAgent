@@ -16,6 +16,7 @@ import json
 import git
 import threading
 import logging
+from gitagent import auth
 
 
 settings = {
@@ -155,26 +156,65 @@ class GitWorker():
 def return_json(fn):
     def wrapper( self, *args, **kwargs ):
         self.set_header("Content-Type", "application/json; charset=UTF-8") 
-        ret = fn( self, *args, **kwargs )
-        if ret != None:
-            self.write( pretty_json_dump(ret) )
+        return fn( self, *args, **kwargs )
+        
     return wrapper
 
+def verify_request( request ):
+
+    config = get_config()
+    if 'password' in config:
+        password = config['password']
+
+        method = request.method
+        uri = request.path
+        request_args = {}
+        for name in request.arguments:
+            request_args[name] = request.arguments[name][0].decode('utf-8')
+
+        #use password directly auth
+        if a.get('password') == password:
+            return True
+
+        #use password sign auth
+        request_time = int(request_args['time'])
+        if abs(request_time - time.time()) > 60:
+            return False
+        
+        sign = request_args['sign']
+        del request_args['sign']
+
+        sign_right = auth.sign( method, uri, request_args, password, time_stamp = request_args['time'] )['sign']
+        print( 'sign_right:',sign_right )
+
+        if sign_right != sign:
+            return False
+
+        return True
+
+def auth_verify(fn):
+    def wrapper( self, *args, **kwargs ):
+        if verify_request(self.request) == False:
+            raise tornado.web.HTTPError(501)
+        return fn( self, *args, **kwargs )
+
+    return wrapper
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
         self.write("Hello, GitAgent~")
 
-
 class RepoHandler(tornado.web.RequestHandler):
     @return_json
+    @auth_verify
     def get(self):
         config = get_config()
         ret = list(config['repo'].keys())
-        return ret
+        self.write( pretty_json_dump(ret) )
 
 class StatusHandler(tornado.web.RequestHandler):
     @return_json
+    @auth_verify
     def get(self,repo):
         config = get_config()
         if repo not in config['repo']:
@@ -202,7 +242,7 @@ class StatusHandler(tornado.web.RequestHandler):
             print( 'change_type:',change_type )
             change[change_type] = list(map( name_getter, diff.iter_change_type( change_type )))
 
-        return info
+        self.write( pretty_json_dump(info) )
 
 class PullHandle(tornado.web.RequestHandler):
     @tornado.web.asynchronous
@@ -210,6 +250,10 @@ class PullHandle(tornado.web.RequestHandler):
     def post(self,repo):
         self.set_header("Content-Type", "application/json; charset=UTF-8") 
         config = get_config()
+
+        if verify_request(self.request) == False:
+            raise tornado.web.HTTPError(501)
+
         if repo not in config['repo']:
             raise tornado.web.HTTPError(404)
         

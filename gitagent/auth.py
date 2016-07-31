@@ -21,16 +21,14 @@ def sign( method, uri, args, password, time_stamp = None ):
         if len(args_str) != 0:
             args_str += '&'
 
-        args_str += key + '=' + args[key]
+        args_str += key + '=' + str(args[key])
 
     str_to_sign = method + uri + '?' + args_str +password
-    print('str_to_sign:',str_to_sign)
+    #print('str_to_sign:',str_to_sign)
 
     m = hashlib.md5()
     m.update(str_to_sign.encode('utf-8'))
 
-    print('md5:%s'%m.hexdigest())
-
+    #print('md5:%s'%m.hexdigest())
     args['sign'] = m.hexdigest()
-
     return args
