@@ -173,7 +173,7 @@ def verify_request( request ):
             request_args[name] = request.arguments[name][0].decode('utf-8')
 
         #use password directly auth
-        if a.get('password') == password:
+        if request_args.get('password') == password:
             return True
 
         #use password sign auth
