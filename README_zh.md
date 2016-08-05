@@ -94,7 +94,7 @@ command 中可以定义多个命令，通过 http 请求来控制 pull 的时候
 
 按照自己的情况编辑配置模板
 
-#### step 2: 运行 gitagent
+#### step 3: 运行 gitagent
 ```python3 -m gitagent [-c config.json] run```
 
 如果没有报错，那么gitagent就已经在运行了（目前 gitagent 在前台运行，如果需要的话可以使用 supervisor 使其在后台运行 ）

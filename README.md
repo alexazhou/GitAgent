@@ -87,7 +87,7 @@ if the -c arg don't gived, gitagent will write the config.json to current direct
 
 Just edit the config file as you need
 
-#### step 2: Run gitagent
+#### step 3: Run gitagent
 ```python3 -m gitagent [-c config.json] run```
 
 If you havn't see any error message, the gitagent is running.
