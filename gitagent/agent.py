@@ -45,7 +45,7 @@ class git_work_progress( git.RemoteProgress ):
 
     def update(self,op_code,cur_count,max_count=None,message=""):
         print( '-->',op_code,cur_count,max_count,message )
-        delegate.console_output( 'gagaga' )
+        self.delegate.console_output( op_code,cur_count,max_count,message )
 
 
 class GitWorker():
@@ -305,6 +305,9 @@ class PullHandle(tornado.web.RequestHandler):
         self.finish()
         del repo_lock[repo]
 
+class CommandHandle(tornado.web.RequestHandler):
+    def post(self,repo):
+        pass
         
 class ConsoleHandler(tornado.websocket.WebSocketHandler):
     """docstring for ConsoleHandler"""
@@ -327,6 +330,7 @@ class ConsoleHandler(tornado.websocket.WebSocketHandler):
 
 
 application = tornado.web.Application([
+    ("/repo/([^/]+)/exec", CommandHandle),
     ("/repo/([^/]+)/pull", PullHandle),
     ("/repo/([^/]+)", StatusHandler),
     ("/repo", RepoHandler ),
