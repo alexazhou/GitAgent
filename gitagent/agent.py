@@ -96,9 +96,9 @@ class GitWorker():
         try:
             repo=git.Repo( self.repo_path )
             if self.GIT_SSH_COMMAND != None:
-                repo.git.custom_environment( GIT_SSH_COMMAND=self.GIT_SSH_COMMAND )
-            print( 'Now repo is on branch:',repo.active_branch.name )
+                repo.git.update_environment( GIT_SSH_COMMAND=self.GIT_SSH_COMMAND )
             
+            print( 'Now repo is on branch:',repo.active_branch.name )
             if self.git_branch in repo.branches:
                 #make sure on right branch
                 if repo.active_branch.name != self.git_branch:
