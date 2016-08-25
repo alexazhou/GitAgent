@@ -45,7 +45,7 @@ class git_work_progress( git.RemoteProgress ):
 
     def update(self,op_code,cur_count,max_count=None,message=""):
         print( '-->',op_code,cur_count,max_count,message )
-        self.delegate.console_output( op_code,cur_count,max_count,message )
+        self.delegate.console_output( '\b' + "%s %s/%s %s"%(op_code,cur_count,max_count,message) )
 
 
 class GitWorker():
