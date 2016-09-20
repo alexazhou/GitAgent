@@ -97,10 +97,15 @@ class GitWorker():
             if self.GIT_SSH_COMMAND != None:
                 repo.git.update_environment( GIT_SSH_COMMAND=self.GIT_SSH_COMMAND )
             
-            print( 'Now repo is on branch:',repo.active_branch.name )
+            branch_now = None
+            if repo.head.is_detached == False:
+                branch_now = repo.active_branch.name
+            
+            print( 'Now repo is on branch:',branch_now )
             if self.git_branch in repo.branches:
                 #make sure on right branch
-                if repo.active_branch.name != self.git_branch:
+
+                if branch_now != self.git_branch:
                     self.console_output( 'checkout branch %s...'%self.git_branch )
                     repo.branches[self.git_branch].checkout()
                 #pull
@@ -121,7 +126,7 @@ class GitWorker():
                 git_exec.checkout( self.git_hash )
 
             if self.command != None:
-                self.console_output('Exec command:%s'%self.command)
+                self.console_output('Exec command: %s'%self.command)
                 p_command = subprocess.Popen(self.command, shell=True, bufsize=1024000, cwd=self.repo_path, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 p_returncode = None
 
@@ -224,7 +229,12 @@ class StatusHandler(tornado.web.RequestHandler):
         commit = repo.commit("HEAD")
         
         info = {}
-        info['branch'] = repo.active_branch.name
+
+        if repo.head.is_detached == True:
+            info['branch'] = None
+        else:
+            info['branch'] = repo.active_branch.name
+
         info['hash'] = commit.hexsha
         info['author'] = str(commit.author)
         info['message'] = commit.message
