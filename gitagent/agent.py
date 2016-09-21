@@ -45,7 +45,7 @@ class git_work_progress( git.RemoteProgress ):
 
     def update(self,op_code,cur_count,max_count=None,message=""):
         print( '-->',op_code,cur_count,max_count,message )
-        self.delegate.console_output( '\r' + "working with op_code[%s] progress[%s/%s] %s"%(op_code,int(cur_count),int(max_count),message) )
+        self.delegate.console_output( '\r' + "working with op_code[%s] progress[%s/%s] %s"%(op_code,cur_count,max_count,message) )
 
 class GitWorker():
     def __init__(self, repo_path, git_branch, git_hash, command=None, console_id=None, GIT_SSH_COMMAND=None):
