@@ -8,7 +8,7 @@
 import time
 import hashlib
 
-def sign( method, uri, args, password, time_stamp = None ):
+def sign( method, uri, args, sign_key, time_stamp = None ):
     if time_stamp == None:
         time_stamp = str(int(time.time()))
 
@@ -23,7 +23,7 @@ def sign( method, uri, args, password, time_stamp = None ):
 
         args_str += key + '=' + str(args[key])
 
-    str_to_sign = method + uri + '?' + args_str +password
+    str_to_sign = method + uri + '?' + args_str + sign_key
     #print('str_to_sign:',str_to_sign)
 
     m = hashlib.md5()

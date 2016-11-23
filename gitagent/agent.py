@@ -183,6 +183,7 @@ def verify_request( request ):
         #use password sign auth
         request_time = int(request_args['time'])
         if abs(request_time - time.time()) > 60:
+            print( 'time diff too much, auth failed' )
             return False
         
         sign = request_args['sign']
@@ -192,6 +193,7 @@ def verify_request( request ):
         print( 'sign_right:',sign_right )
 
         if sign_right != sign:
+            print( 'verify request failed due to sign not match' )
             return False
 
         return True
