@@ -212,7 +212,7 @@ import 之后，就可以直接使用啦
 #### 创建 client 对象
 
 ```
-agent_client = client.AgentClient( SERVER_ADDR, SERVER_PORT, passwork=None )
+agent_client = client.AgentClient( SERVER_ADDR, SERVER_PORT, password=None )
 ```
 
 #### 获取仓库列表
