@@ -3,7 +3,7 @@ A web server receive HTTP request to pull local repository
 
 [中文文档](https://github.com/alexazhou/GitAgent/blob/master/README_zh.md)
 
-##Desc
+## Desc
 
 GitAgent run as a webserver. It receive command from http requests and do operation to local git repositorys.
 
@@ -18,11 +18,11 @@ With GitAgent, you can a git repository on other machine to:
 
 GitAgent also support execute some commant after pull success, and use a password to protect http request.
 
-##install
+## install
 
 python3 -m pip install gitagent
 
-##require
+## require
 
 GitAgent based on python3, and those libs was required.
 
@@ -32,7 +32,7 @@ GitAgent based on python3, and those libs was required.
  
 if you use pip install GitAgent, the requirements will be install automatic.
 
-##config
+## config
 
 ##### Basic config format
 The basic format of config.json is like this.
@@ -40,41 +40,41 @@ The basic format of config.json is like this.
 ```
 example_config = {
     "bind_ip":"0.0.0.0",
-	"port":10000,
-	"repo":{
-		"self":{
-			"repo_path":"./",
-		}
-	},
+    "port":10000,
+    "repo":{
+        "self":{
+            "repo_path":"./",
+        }
+    },
 }
 ```
 If need, you can put more than one repon into it.
 
 
-#####full config format
+##### full config format
 
 if you need use password, or execute command after pull, you can add some args to config file like that.
 
 ```
 example_config_full = {
     "bind_ip":"0.0.0.0",
-	"port":10000,
-	"repo":{
-		"self":{
-			"repo_path":"./",
+    "port":10000,
+    "repo":{
+        "self":{
+            "repo_path":"./",
             "command":{
                 "cmd1":"the command 1",
                 "cmd2":"the command 2",
             }
-		}
-	},
+        }
+    },
     "password":"123456"
 }
 
 ```
 
  
-##Usage
+## Usage
 
 #### step 1: Write default config file
 ```python3 -m gitagent [-c config.json] write```
@@ -92,9 +92,9 @@ Just edit the config file as you need
 
 If you havn't see any error message, the gitagent is running.
 
-##API
+## API
 
-####list all repos
+#### list all repos
 
 ```curl -v 'http://localhost:10000/repo'```
 
@@ -109,7 +109,7 @@ Return:
 ```
 
 
-####repo status
+#### repo status
 
 ```curl -v 'http://localhost:10000/repo/demo1'```
 
@@ -139,7 +139,7 @@ Return:
 
 busy means the repo is processing a pull request or other action
 
-####repo pull / switch branch / switch hash 
+#### repo pull / switch branch / switch hash 
 
 ```curl -v -d 'git_branch=master&git_hash=abcdefg&command=cmd1&block=1' 'http://localhost:10000/repo/demo1/pull'```
 
